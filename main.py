@@ -59,7 +59,7 @@ async def mute(ctx, member: discord.Member, length, reason=None):
 
   await member.add_roles(muted, reason=reason)
   await ctx.send(f"Server Muted {member.mention} \nReason: {reason} \nLength: {length}")
-  await member.send(f"You were server muted in the server {guild.name} for reason {reason} for {length}") #\\\\\\FIX
+  await member.send(f"You were server muted in the server {guild.name} for reason {reason} for {length}")
   await asyncio.sleep(flength)
   await member.remove_roles(muted)
   await ctx.send(f'{member.mention} has been unmuted')
