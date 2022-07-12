@@ -64,7 +64,7 @@ async def mute(ctx, member: discord.Member, length, reason=None):
   if reason == None:
     reason = 'did something bad'
   await ctx.send(f"Hi I was told to mute {member.mention} because (s)he {reason}, I was also told to mute him for {length}")
-  await member.send(f"Hi, you were muted in the server {guild.name} because {reason}, I was also told to mute you for {length}")
+  await member.send(f"Hi, you were muted on the server {guild.name} because {reason}, I was also told to mute you for {length}")
   await asyncio.sleep(flength)
   await member.remove_roles(muted)
   await ctx.send(f'{member.mention} has been unmuted (Yay!)')
@@ -78,12 +78,28 @@ async def unmute(ctx, member: discord.Member, reason=None):
   if reason == None:
     reason = 'did something good'
   await ctx.send(f"Hi I was told to unmute {member.mention} because (s)he {reason}")
-  await member.send(f"Hi, you were unmuted in the server {guild.name} because you {reason}")
+  await member.send(f"Hi, you were unmuted on the server {guild.name} because you {reason}")
+
+@client.command()
+@commands.has_permissions(kick_members=True)
+async def kick(ctx, member: discord.Member, reason=None):
+  guild = ctx.guild
+  if reason == None:
+    reason = 'did something bad'
+  await ctx.send(f"Hi I was told to kick {member.mention} because (s)he {reason}")
+  await member.send(f"Hi, you were kicked on the server {guild.name} because you {reason}")
+  await member.kick()
+
+@client.command()
+@commands.has_permissions(create_instant_invite = True)
+async def invite(ctx, member: discord.Member, message):
+  invite = await discord.abc.GuildChannel.create_invite(ctx.message.channel, max_uses=1)
+  await member.send(f'Hi {ctx.author.name} sent you an invite! \nHe said: \n{message} \n {invite}')
+
 
 @client.command()
 @commands.has_permissions(ban_members=True)
 async def ban (ctx, member: discord.Member, reason=None):
-  print('ver')
   
   if member == None or member == ctx.message.author:
     await ctx.channel.send("You cannot ban yourself")
