@@ -16,12 +16,13 @@ client = commands.Bot(command_prefix='?')
 async def test(ctx):
   print('command recieved')
 
+  
+
 @client.command()
 @commands.has_permissions(kick_members=True)
 async def mute(ctx, member: discord.Member, length, reason=None):
   guild = ctx.guild
   muted = get(guild.roles, name='Muted')
-  member = get(guild.roles, name='member')
 
   dater = re.split('(\D+)',length)
   
@@ -61,7 +62,6 @@ async def mute(ctx, member: discord.Member, length, reason=None):
     for channel in guild.channels:
       await channel.set_premissions(muted, speak=False, send_messages=False)
 
-  await member.remove_roles(member)
   await member.add_roles(muted, reason=reason)
   if reason == None:
     reason = 'did something bad'
@@ -69,21 +69,24 @@ async def mute(ctx, member: discord.Member, length, reason=None):
   await member.send(f"Hi, you were muted on the server {guild.name} because {reason}, I was also told to mute you for {length}")
   await asyncio.sleep(flength)
   await member.remove_roles(muted)
-  await member.add_roles(member)
   await ctx.send(f'{member.mention} has been unmuted (Yay!)')
+
+
+  
 
 @client.command()
 @commands.has_permissions(kick_members=True)
 async def unmute(ctx, member: discord.Member, reason=None):
   guild = ctx.guild
-  member = get(guild.roles, name='member')
   muted = get(guild.roles, name='Muted')
   await member.remove_roles(muted, reason=reason)
-  await member.add_roles(member)
   if reason == None:
     reason = 'did something good'
   await ctx.send(f"Hi I was told to unmute {member.mention} because (s)he {reason}")
   await member.send(f"Hi, you were unmuted on the server {guild.name} because you {reason}")
+
+
+  
 
 @client.command()
 @commands.has_permissions(kick_members=True)
@@ -95,11 +98,17 @@ async def kick(ctx, member: discord.Member, reason=None):
   await member.send(f"Hi, you were kicked on the server {guild.name} because you {reason}")
   await member.kick()
 
+
+  
+
 @client.command()
 @commands.has_permissions(create_instant_invite = True)
 async def invite(ctx, member: discord.Member, message):
   invite = await discord.abc.GuildChannel.create_invite(ctx.message.channel, max_uses=1)
   await member.send(f'Hi {ctx.author.name} sent you an invite! \nHe said: \n{message} \n {invite}')
+
+
+  
 
 
 @client.command()
@@ -121,41 +130,15 @@ async def ban (ctx, member: discord.Member, reason=None):
     await member.ban()
 
 
-@client.event
-async def on_message(message):
-  ctx = await client.get_context(message)
-  guild = ctx.guild
-  member = get(guild.roles, name='member')
-  muted = get(guild.roles, name='Muted')
-  counter = 0 
-  author = ctx.message.author
-  with open("list.txt", "r+") as file:
-      for lines in file:
-          if lines.strip("\n") == str (message.author.id):
-              counter+=1 
-
-      file.writelines(f"{str(message.author.id)}\n")
-      if counter > 5:
-        if not muted:
-          muted = await guild.create_role(name='Muted')
-          
-          for channel in guild.channels:
-            await channel.set_premissions(muted, speak=False, send_messages=False)
-        
-        await author.add_roles(muted, reason='Spam')
-        await author.remove_roles(member)
-        await ctx.send(f"Hi I was told to mute {author.mention} because (s)he spammed, I was also told to mute him for 5 minutes")
-        await author.send(f"Hi, you were muted on the server {guild.name} because spammed, I was also told to mute you for 5 minutes")
-        await asyncio.sleep(300)
-        await author.remove_roles(muted)
-        await author.add_roles(member)
-        await ctx.send(f'{author.mention} has been unmuted (Yay!)')
-
+    
 
 @client.command()
 @commands.has_permissions(administrator=True)
 async def shutdown(ctx):
   await client.close()
+
+
+  
 
 @client.event
 async def on_command_error(ctx, error):
@@ -167,6 +150,32 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send('Please remember to put everything in your sentence or I can\'t understand it <:Basil_smile:996486112442863686>')
 
+
+@client.event
+async def on_message(ctx, message):
+  author = message.author
+  guild = ctx.guild
+  muted = get(guild.roles, name='Muted')
+  counter = 0 
+  with open("list.txt", "r+") as file:
+      for lines in file:
+          if lines.strip("\n") == str (author.id):
+              counter+=1 
+
+      file.writelines(f"{str(author.id)}\n")
+      if counter > 5:
+        if not muted:
+          muted = await guild.create_role(name='Muted')
+
+          for channel in guild.channels:
+            await channel.set_premissions(muted, speak=False, send_messages=False)
+
+        await author.add_roles(muted, reason='Spam')
+        ctx.send(f'Hi, I have muted {author} for 5 minutes for spam.')
+        await asyncio.sleep(600)
+        await author.remove_roles(muted)
+        await ctx.send(f'{author.mention} has been unmuted (Yay!)')
+          
 @client.event
 async def on_ready():
     print("Everything is going to be ok")
