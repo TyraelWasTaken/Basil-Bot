@@ -125,7 +125,7 @@ async def ban (ctx, member: discord.Member, reason=None):
 async def on_message(message):
   ctx = await client.get_context(message)
   guild = ctx.guild
-  member = get(guild.roles, name='member')
+  memberrole = get(guild.roles, name='member')
   muted = get(guild.roles, name='Muted')
   counter = 0 
   author = ctx.message.author
@@ -143,13 +143,15 @@ async def on_message(message):
             await channel.set_premissions(muted, speak=False, send_messages=False)
         
         await author.add_roles(muted, reason='Spam')
-        await author.remove_roles(member)
+        await author.remove_roles(memberrole)
         await ctx.send(f"Hi I was told to mute {author.mention} because (s)he spammed, I was also told to mute him for 5 minutes")
         await author.send(f"Hi, you were muted on the server {guild.name} because spammed, I was also told to mute you for 5 minutes")
         await asyncio.sleep(300)
         await author.remove_roles(muted)
-        await author.add_roles(member)
+        await author.add_roles(memberrole)
         await ctx.send(f'{author.mention} has been unmuted (Yay!)')
+  
+  await client.process_commands(message)
 
 
 @client.command()
