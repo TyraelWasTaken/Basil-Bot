@@ -12,9 +12,45 @@ import re
 
 client = commands.Bot(command_prefix='?')
 
+boottime = time.time()
+tests = 0
+clears = 0
+infos = 0
+mutes = 0
+unmutes = 0
+kicks = 0
+invites = 0
+bans = 0
+shutdowns = 0
+errors = 0
+
+guild_ids = 807264721308745739
+
 @client.command()
 async def test(ctx):
+  await ctx.send('Hia')
   print('command recieved')
+  global tests
+  tests = tests + 1
+
+@client.command()
+@commands.has_permissions(manage_messages=True)
+async def clear_channel(ctx, limit: int):
+  await ctx.channel.purge(limit=limit)
+  await ctx.send('Cleared by {}'.format(ctx.author.mention))
+  await ctx.message.delete()
+  global clears
+  clears = clears + 1
+
+@client.command()
+@commands.has_permissions(administrator=True)
+async def info(ctx):
+  global infos
+  infos = infos + 1
+  uptime = time.time() - boottime
+  await ctx.author.send(f'uptime: {uptime} \ntests: {tests} \nclears: {clears} \ninfos: {infos} \nmutes: {mutes} \nunmutes: {unmutes} \nkicks: {kicks} \ninvites: {invites} \nbans: {bans} \nshutdowns: {shutdowns} \nerrors: {errors}')
+
+
 
 @client.command()
 @commands.has_permissions(kick_members=True)
@@ -54,7 +90,8 @@ async def mute(ctx, member: discord.Member, length, reason=None):
   elif letter == 'dec':
     flength = int(numbers) * 60 * 60 * 24 * 7 * 30 * 12 * 100
 
-
+  global mutes
+  mutes = mutes + 1
   if not muted:
     muted = await guild.create_role(name='Muted')
 
@@ -84,6 +121,8 @@ async def unmute(ctx, member: discord.Member, reason=None):
     reason = 'did something good'
   await ctx.send(f"Hi I was told to unmute {member.mention} because (s)he {reason}")
   await member.send(f"Hi, you were unmuted on the server {guild.name} because you {reason}")
+  global unmutes
+  unmutes = unmutes + 1
 
 @client.command()
 @commands.has_permissions(kick_members=True)
@@ -94,18 +133,21 @@ async def kick(ctx, member: discord.Member, reason=None):
   await ctx.send(f"Hi I was told to kick {member.mention} because (s)he {reason}")
   await member.send(f"Hi, you were kicked on the server {guild.name} because you {reason}")
   await member.kick()
+  global kicks
+  kicks = kicks + 1
 
 @client.command()
 @commands.has_permissions(create_instant_invite = True)
 async def invite(ctx, member: discord.Member, message):
   invite = await discord.abc.GuildChannel.create_invite(ctx.message.channel, max_uses=1)
   await member.send(f'Hi {ctx.author.name} sent you an invite! \nHe said: \n{message} \n {invite}')
-
+  global invites
+  invites = invites + 1
 
 @client.command()
 @commands.has_permissions(ban_members=True)
 async def ban (ctx, member: discord.Member, reason=None):
-  
+  global bans
   if member == None or member == ctx.message.author:
     await ctx.channel.send("You cannot ban yourself")
     return
@@ -114,18 +156,19 @@ async def ban (ctx, member: discord.Member, reason=None):
     await member.send(f'Hi, you have been banned from {ctx.guild.name}. They didn\'t say why :(.')
     await ctx.channel.send(f'Hi, {member.name} has been banned by {ctx.author.name} for no particular reason.')
     await member.ban()
+    bans = bans + 1
 
   else:
     await member.send(f'Hi, {member.name} , you have been banned from {ctx.guild.name()}. The reason for this was {reason}.')
     await ctx.channel.send(f'Hi, {member.name} has been banned by {ctx.author.name} the reason specified was {reason}.')
     await member.ban()
-
+    bans = bans + 1
 
 @client.event
 async def on_message(message):
   ctx = await client.get_context(message)
   guild = ctx.guild
-  memberrole = get(guild.roles, name='member')
+  memberrole = get(guild.roles, name='member') #this gives an error, dont remove it, i dont know why its here but without it, it crashes
   muted = get(guild.roles, name='Muted')
   counter = 0 
   author = ctx.message.author
@@ -157,17 +200,23 @@ async def on_message(message):
 @client.command()
 @commands.has_permissions(administrator=True)
 async def shutdown(ctx):
+  await ctx.send('Shutdown')
+  global shutdowns
+  shutdowns = shutdowns + 1
+  print('shutdown')
   await client.close()
 
 @client.event
 async def on_command_error(ctx, error):
-    print(error)
-    if str(error) == 'You are missing Mute Members permission(s) to run this command.':
-      await ctx.send('Sorry (s)he is already muted ')
-    elif isinstance(error, commands.MissingPermissions):
-      await ctx.send(f"Sorry but you're not allowed to do that, ok? <:Basil_smile:996486112442863686>") 
-    if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send('Please remember to put everything in your sentence or I can\'t understand it <:Basil_smile:996486112442863686>')
+  print(error)
+  global errors
+  errors = errors + 1
+  if str(error) == 'You are missing Mute Members permission(s) to run this command.':
+    await ctx.send('Sorry (s)he is already muted ')
+  elif isinstance(error, commands.MissingPermissions):
+    await ctx.send(f"Sorry but you're not allowed to do that, ok? <:Basil_smile:996486112442863686>") 
+  if isinstance(error, commands.MissingRequiredArgument):
+      await ctx.send('Please remember to put everything in your sentence or I can\'t understand it <:Basil_smile:996486112442863686>')
 
 @client.event
 async def on_ready():
@@ -178,4 +227,4 @@ async def on_ready():
           file.truncate(0)
 
 keep_alive()
-client.run(os.environ["key"])
+client.run(os.environ["key"]) #insert your bot key here
